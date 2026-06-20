@@ -16,6 +16,9 @@
     - not ansible_check_mode
     - "grafana_dashboards | length > 0"
   block:
+    - name: Debug
+      ansible.builtin.debug:
+        var: proxy_env_orchestrator
     - name: "Get latest revision id"
       ansible.builtin.uri:
         url: "https://grafana.com/api/dashboards/{{ item.dashboard_id }}"
@@ -24,6 +27,7 @@
       register: __dashboard_info
       loop: "{{ grafana_dashboards }}"
       when: item.dashboard_url is not defined
+      environment: "{{ proxy_env_orchestrator | default(omit) }}"
 
     - name: "Extract revision_id if not defined in grafana_dashboards"
       ansible.builtin.set_fact:
@@ -48,6 +52,7 @@
       delay: 2
       changed_when: false
       loop: "{{ __dashboards_with_revision }}"
+      environment: "{{ proxy_env_orchestrator | default(omit) }}"
 
     # As noted in [1] an exported dashboard replaces the exporter's datasource
     # name with a representative name, something like 'DS_GRAPHITE'. The name
